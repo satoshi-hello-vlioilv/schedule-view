@@ -2,9 +2,11 @@
 """アプリのアイコン（exe・窓・タスクバー・ショートカット・起動画面）を描く。標準ライブラリだけで書く（作るとき desktop/build.rs が呼ぶ）。
 
     python program/app/app_icon.py <出力フォルダ> [案]     icon.ico と icon-<大きさ>.png を書く（案を比べるとき）
+    node program/tools/icon-sheet.mjs <出力フォルダ>        案を並べた一覧の画像（明るい地・タスクバーの暗い地・起動画面の紺。16〜256px）
 
 形は「中心からの距離」（SDF）で書き、縁は 1px の幅でぼかす（どの大きさでも同じ式で描け、縮めて潰れない）。
-絵の決め方は program/tools/ui-proposals/2026-10-icon.json（案を描いて別のエージェントが採点）。
+絵の決め方は program/tools/ui-proposals/2026-10-icon.json（5 案を描いて別のエージェントが採点し、gantt〈作業の流れの帯〉を 85.5 点で選んだ）。
+ほかの案は比べた記録として残す（DESIGNS。描くのは DEFAULT だけ）。
 """
 from __future__ import annotations
 
@@ -57,21 +59,69 @@ BLUE0, BLUE1 = _hex("#0b4f8f"), _hex("#1a7fd4")
 WHITE, AMBER, MINT = _hex("#ffffff"), _hex("#f2a93b"), _hex("#bfe3ff")
 
 
-def design_gantt():
-    """作業の流れ（設備ごとの帯を時刻の順に並べ、いまの時刻にアンバーの線）"""
+def design_gantt(size=256):
+    """作業の流れ（設備ごとの帯を時刻の順に並べ、いまの時刻にアンバーの線）。
+    小さい絵（24px 以下）は線を 2 画素の幅にする（1 画素だと白い帯とまざって淡く見えた: 採点の指摘）"""
     ground = rrect(0.5, 0.5, 0.46, 0.46, 0.13)
     bars = [rrect(0.36, 0.30, 0.18, 0.065, 0.06), rrect(0.55, 0.50, 0.24, 0.065, 0.06), rrect(0.46, 0.70, 0.20, 0.065, 0.06)]
-    now = segment(0.66, 0.18, 0.66, 0.82, 0.03)
+    now = segment(0.66, 0.18, 0.66, 0.82, max(0.03, 1.0 / size))
     return [(ground, gradient(BLUE0, BLUE1))] + [(b, WHITE) for b in bars] + [(now, AMBER)]
 
 
-DESIGNS = {"gantt": design_gantt}
+def design_calendar():
+    """暦と時計（予定の時刻）"""
+    ground = rrect(0.5, 0.5, 0.46, 0.46, 0.13)
+    page = rrect(0.45, 0.52, 0.29, 0.28, 0.05)
+    head = rrect(0.45, 0.30, 0.29, 0.07, 0.04)
+    rings = [rrect(0.33, 0.22, 0.025, 0.06, 0.02), rrect(0.57, 0.22, 0.025, 0.06, 0.02)]
+    cells = [rrect(0.30 + 0.1 * (i % 3), 0.48 + 0.11 * (i // 3), 0.035, 0.035, 0.01) for i in range(6)]
+    clock = circle(0.72, 0.72, 0.17)
+    face = circle(0.72, 0.72, 0.13)
+    hands = [segment(0.72, 0.72, 0.72, 0.63, 0.018), segment(0.72, 0.72, 0.79, 0.74, 0.018)]
+    return ([(ground, gradient(BLUE0, BLUE1)), (page, WHITE), (head, MINT)] + [(r, BLUE0) for r in rings]
+            + [(c, BLUE1) for c in cells] + [(clock, AMBER), (face, WHITE)] + [(h, BLUE0) for h in hands])
+
+
+def design_coil():
+    """コイル（巻いた板）と進む向き"""
+    ground = rrect(0.5, 0.5, 0.46, 0.46, 0.13)
+    rings = [(circle(0.42, 0.5, r), c) for r, c in ((0.27, WHITE), (0.21, MINT), (0.15, WHITE), (0.08, BLUE0))]
+    strip = rrect(0.66, 0.77, 0.22, 0.045, 0.02)
+    arrow = [segment(0.70, 0.62, 0.84, 0.62, 0.03), segment(0.84, 0.62, 0.78, 0.56, 0.03), segment(0.84, 0.62, 0.78, 0.68, 0.03)]
+    return [(ground, gradient(BLUE0, BLUE1))] + rings + [(strip, WHITE)] + [(a, AMBER) for a in arrow]
+
+
+def design_list():
+    """予定の一覧（行と、いまの行の印）"""
+    ground = rrect(0.5, 0.5, 0.46, 0.46, 0.13)
+    rows = [rrect(0.56, 0.28 + 0.15 * i, 0.22, 0.045, 0.03) for i in range(4)]
+    dots = [circle(0.25, 0.28 + 0.15 * i, 0.045) for i in range(4)]
+    mark = rrect(0.5, 0.43, 0.40, 0.07, 0.05)
+    return ([(ground, gradient(BLUE0, BLUE1)), (mark, _hex("#3b8fe0"))] + [(r, WHITE) for r in rows]
+            + [(d, AMBER if i == 1 else MINT) for i, d in enumerate(dots)])
+
+
+def design_lines():
+    """設備ごとの 3 本の線（L-1 青・L-2 緑・L-3 橙。画面の設備の色）と、時刻の目盛り。紺の地に明るい縁（紺の起動画面でも縁が見える）"""
+    colors = (_hex("#60a5fa"), _hex("#4ade80"), _hex("#fb923c"))
+    spans = (((0.16, 0.42), (0.54, 0.84)), ((0.26, 0.56), (0.68, 0.84)), ((0.16, 0.34), (0.46, 0.76)))
+    bars = []
+    for i, (row, c) in enumerate(zip(spans, colors)):
+        y = 0.28 + 0.2 * i
+        bars += [(rrect((a + b) / 2, y, (b - a) / 2, 0.06, 0.05), c) for a, b in row]
+    ticks = [segment(0.18 + 0.16 * k, 0.86, 0.18 + 0.16 * k, 0.89, 0.012) for k in range(5)]
+    return ([(rrect(0.5, 0.5, 0.46, 0.46, 0.13), _hex("#4f7db0")), (rrect(0.5, 0.5, 0.43, 0.43, 0.11), _hex("#0b2a4a"))]
+            + bars + [(t, WHITE) for t in ticks])
+
+
+DESIGNS = {"gantt": design_gantt, "calendar": design_calendar, "coil": design_coil, "list": design_list, "lines": design_lines}
 DEFAULT = "gantt"
 
 
 def render(size, design=DEFAULT):
     """RGBA のバイト列（上の行から）"""
-    layers = DESIGNS[design]()
+    make = DESIGNS[design]
+    layers = make(size) if "size" in make.__code__.co_varnames[:make.__code__.co_argcount] else make()
     px = bytearray()
     aa = 1.0 / size
     for j in range(size):
