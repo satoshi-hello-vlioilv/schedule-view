@@ -1,0 +1,51 @@
+{
+  "cm3_base_url": "http://nlmfangyweb1a:9085",
+  "init_path": "/Cm3SchWeb/service/schapp/cmschview/init",
+  "cm3_view_url_template": "http://nlmfangyweb1a:9085/Cm3SchWeb/#/schapp/cmschview?termkbn={termkbn}&setsubi={setsubi}",
+  "lot_url_template": "http://nlmfangyweb1a/lotdsp/?ltno={lotNo}&mode=2",
+  "client_ip": "150.150.107.35",
+  "default_setsubi": "L-2",
+  "equipments": [
+    {
+      "code": "L-1",
+      "name": "L-1",
+      "term_kbn": "4"
+    },
+    {
+      "code": "L-2",
+      "name": "L-2",
+      "term_kbn": "4"
+    },
+    {
+      "code": "L-3",
+      "name": "L-3",
+      "term_kbn": "4"
+    }
+  ],
+  "master": {
+    "enabled": true,
+    "source_path": "\\\\Nlmsrvngy03\\Read\\【New】仕掛\\台帳\\LOTNOW.sqlite3",
+    "local_copy": "data/LOTNOW.sqlite3",
+    "check_interval_sec": 60
+  },
+  "hot": {
+    "title": "HOTコイル作業順",
+    "equipments": [
+      "L-1",
+      "L-2",
+      "L-3"
+    ],
+    "prev_value": "HOT",
+    "result_course_column": "実績_設備ｺｰｽ",
+    "remain_course_column": "残仕掛設備ｺｰｽ",
+    "kama_column": "設計_PIT炉番炉順"
+  },
+  "timeout_sec": 15,
+  "use_system_proxy": false,
+  "cache_sec": 10,
+  "auto_refresh_sec": 60,
+  "settings_dir": "",
+  "update": {
+    "source": ""
+  }
+}

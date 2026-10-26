@@ -1,0 +1,60 @@
+[package]
+name = "schedule-view-desktop"
+version = "12.0.0"
+description = "CM3 スケジュールビューア（CM3 のスケジュールと仕掛台帳）の exe"
+edition = "2021"
+rust-version = "1.90"
+publish = false
+
+# exe の名前は program/app/brand.json の exe と同じ（src/brand.rs の試験が食い違いを止める）
+# 窓に依らない処理（CM3・台帳・列の設定・Excel・配布と更新）。exe（src/main.rs）と試験（tests/）が使う
+[lib]
+name = "sv_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ScheduleView"
+path = "src/main.rs"
+
+[features]
+# 起動画面を exe に埋め込む本番の形。外すと Tauri の開発の形になる
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+tauri-plugin-single-instance = "2.5"
+tauri-plugin-opener = "2.7"
+serde = { version = "1", features = ["derive"] }
+# preserve_order: CM3 の応答の項目の順（設備停止の文言は項目の順につなぐ）・設定ファイルの順を保つ
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+# 台帳（LOTNOW.sqlite3 の手元の写し）を読む。SQLite は exe に入れる（どの PC でも同じ版）
+rusqlite = { version = "0.37", features = ["bundled"] }
+# CM3 へ問い合わせる（http だけ。TLS は使わない）
+ureq = { version = "3", default-features = false }
+# 文字: 全角半角の正規化（NFKC）・CP932 と欧文の読み直し（文字化けの直し）・HTML の文字参照
+unicode-normalization = "0.1"
+encoding_rs = "0.8"
+htmlize = { version = "1", features = ["unescape"] }
+# Excel の書き出し・配る ZIP の展開（zip）・指紋（SHA-256）
+zip = { version = "9", default-features = false, features = ["deflate"] }
+sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+# ショートカットを作る（src/lnk.rs）・プロセスを PID で見る（src/proc.rs）。版は Tauri が使っているものに合わせる
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_System_Com", "Win32_UI_Shell", "Win32_Storage_FileSystem"] }
+
+[dev-dependencies]
+# 開発用の小さな HTTP の受け口（examples/serve.rs: ブラウザで画面を撮る・測る）
+tiny_http = "0.12"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
