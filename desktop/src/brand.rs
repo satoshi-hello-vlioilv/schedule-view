@@ -34,7 +34,7 @@ mod tests {
         assert_eq!(conf["identifier"], b.app_id.as_str(), "Tauri の identifier は変えない目印（WebView の保存先が変わらない）");
         assert_eq!(conf["productName"], b.name.as_str());
         assert_eq!(format!("{}.exe", conf["mainBinaryName"].as_str().unwrap()), b.exe, "exe の名前");
-        let cargo = include_str!("../Cargo.toml");
+        let cargo = include_str!("../Cargo.toml").replace("\r\n", "\n"); // Windows の取り出しは CRLF になる
         assert!(cargo.contains(&format!("[[bin]]\nname = \"{}\"", b.exe.trim_end_matches(".exe"))), "Cargo.toml の [[bin]] name");
         assert!(!b.data_dir.is_empty() && !b.title.is_empty() && !b.subtitle.is_empty());
     }
