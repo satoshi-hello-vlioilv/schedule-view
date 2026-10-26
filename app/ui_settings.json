@@ -1,0 +1,18 @@
+{
+  "inspect_keywords": [
+    "点検板"
+  ],
+  "colors": {
+    "normal_bg": "#ffffff",
+    "stripe_bg": "#eef8ee",
+    "self_next_text": "#8a5300",
+    "inspect_bg": "#fff4c2",
+    "inspect_text": "#6b4e00",
+    "inspect_tag": "#c99400",
+    "stop_bg": "#fdecec",
+    "stop_text": "#8a1c13",
+    "stop_tag": "#b42318",
+    "date_line": "#9aa5b1",
+    "accent": "#0f6cbd"
+  }
+}

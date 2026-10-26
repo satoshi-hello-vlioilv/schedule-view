@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CM3 スケジュールビューア</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="title"><h1>CM3 スケジュール</h1></div>
+
+  <div class="controls">
+    <div class="tabs" id="equipTabs" role="tablist">
+      {% for e in equipments %}
+      <button type="button" class="tab" role="tab" data-code="{{ e.code }}" data-termkbn="{{ e.term_kbn }}">{{ e.name }}</button>
+      {% endfor %}
+      {% if hot.equipments %}
+      <button type="button" class="tab hot" role="tab" data-code="__HOT__" title="{{ hot.equipments | join('・') }} で前工程が HOT のロットを、作業予定順にまとめた一覧">{{ hot.title }}</button>
+      {% endif %}
+    </div>
+
+    <label class="field grow">
+      <span>検索</span>
+      <input id="search" type="search" placeholder="ロットNo・材質・用途名・次工程・釜番・台帳の項目">
+    </label>
+
+    <label class="toggle">
+      <input id="autoRefresh" type="checkbox" checked>
+      <span>自動更新 {{ refresh_sec }}秒</span>
+    </label>
+
+    <button id="btnRefresh" class="btn primary" type="button">更新</button>
+    <button id="btnCsv" class="btn" type="button" title="今の表示（列・読み替え・書式・並び順・絞り込み）のままCSVにします">CSV出力</button>
+    <button id="btnXlsx" class="btn" type="button" title="今の表示のまま、色・列幅も含めてExcelファイルにします">Excel出力</button>
+    <button id="btnCols" class="btn" type="button">列の設定</button>
+    <button id="btnMaster" class="btn" type="button">台帳設定</button>
+    <button id="btnUi" class="btn" type="button">配色</button>
+    <a id="lnkCm3" class="btn ghost" target="_blank" rel="noopener">CM3画面を開く</a>
+  </div>
+</header>
+
+<section class="summary" id="lineSummary">
+  <div class="card"><div class="label">製造件数</div><div class="value" id="sumCount">-</div></div>
+  <div class="card"><div class="label">ロット数</div><div class="value" id="sumLots">-</div></div>
+  <div class="card"><div class="label">点検</div><div class="value inspv" id="sumInspect">-</div></div>
+  <div class="card"><div class="label">設備停止</div><div class="value stopv" id="sumStop">-</div></div>
+  <div class="card"><div class="label">台帳一致</div><div class="value" id="sumHit">-</div></div>
+  <div class="card"><div class="label">先頭 / 最終の完了予定</div><div class="value small" id="sumRange">-</div></div>
+  <div class="card wide"><div class="label">CM3更新 / 取得 / 台帳作成</div><div class="value small" id="sumUpdate">-</div></div>
+</section>
+
+<section class="filters" id="nextFilters"></section>
+
+<!-- ============ HOT coil work order ============ -->
+<section class="hot-panel" id="hotPanel" hidden>
+  <div class="hot-cards" id="hotCards"></div>
+  <div class="hot-tl-wrap">
+    <div class="hot-tl-head">
+      <b>作業の流れ</b>
+      <span class="sp">設備ごとの並び。帯の文字は釜番、帯の長さは「開始予定（前の行の完了予定から推定）～完了予定」。帯を押すとその釜番だけ表示します。</span>
+      <button id="hotTlToggle" class="btn small" type="button">図を隠す</button>
+    </div>
+    <div class="hot-tl" id="hotTl"></div>
+  </div>
+  <div class="hot-kama">
+    <span class="field">釜番</span>
+    <div class="hot-kama-list" id="hotKama"></div>
+  </div>
+</section>
+
+<div id="message" class="message" hidden></div>
+<div id="masterMsg" class="message warn" hidden></div>
+
+<main class="table-wrap">
+  <table id="grid">
+    <thead><tr id="headRow"></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="empty" class="empty" hidden>表示するデータがありません</div>
+</main>
+
+<footer class="foot"><span id="state">待機中</span></footer>
+
+<!-- ============ lot master settings ============ -->
+<div id="dlg" class="dlg-back" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlg-head">
+      <h2 id="dlgTitle">台帳（LOTNOW）設定</h2>
+      <button class="btn dlg-close" type="button">閉じる</button>
+    </div>
+
+    <div class="dlg-body">
+      <section>
+        <h3>1. ファイル</h3>
+        <table class="kv">
+          <tr><th>元ファイル</th><td id="mSource"></td></tr>
+          <tr><th>手元コピー</th><td id="mLocal"></td></tr>
+          <tr><th>状態</th><td id="mState"></td></tr>
+          <tr><th>台帳作成日時</th><td id="mCreated"></td></tr>
+          <tr><th>コピー日時</th><td id="mCopied"></td></tr>
+          <tr><th>読込件数</th><td id="mRows"></td></tr>
+        </table>
+        <button id="mReload" class="btn" type="button">今すぐ再コピー・再読込</button>
+      </section>
+
+      <section>
+        <h3>2. 突合せキー</h3>
+        <p class="note">スケジュールの項目と台帳の列の組を指定します。複数の組を指定すると、<b>すべての組が一致した行</b>を結合します。
+          値は全角／半角・大文字／小文字・空白の違いをそろえ、数値は数値として比較します（0.300 と 0.3 は一致）。</p>
+
+        <div class="keybar">
+          <label>台帳のテーブル
+            <select id="mTable"></select>
+          </label>
+        </div>
+
+        <table class="keys">
+          <thead><tr><th>#</th><th>スケジュールの項目</th><th></th><th>台帳の列</th><th></th></tr></thead>
+          <tbody id="mKeys"></tbody>
+        </table>
+        <div class="keybar">
+          <button id="mKeyAdd" class="btn" type="button">＋ キーを追加</button>
+          <button id="mKeyTest" class="btn" type="button">一致を確認</button>
+          <span id="mKeyResult" class="note"></span>
+        </div>
+
+        <details class="cand-wrap">
+          <summary>ロット番号列の候補（列名と実データから判定）</summary>
+          <p class="note">列名（ロット番号・ﾛｯﾄ番号・ロットNo など表記ゆれを吸収）と、実際の値（ロット番号の形か、スケジュールのロットと何件一致するか）から判定しています。「使う」で1番目のキーの台帳の列に設定します。</p>
+          <table class="cand">
+            <thead><tr><th></th><th>テーブル</th><th>列名</th><th>列名判定</th><th>ロット形式</th><th>重複なし</th><th>スケジュール一致</th><th>データ例</th></tr></thead>
+            <tbody id="mCand"></tbody>
+          </table>
+        </details>
+      </section>
+
+      <p class="note">表示する台帳の列・並び順・読み替えなどは「列の設定」で行います。</p>
+    </div>
+
+    <div class="dlg-foot">
+      <span id="mMsg" class="note"></span>
+      <button id="mSave" class="btn primary" type="button">保存して反映</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ color settings ============ -->
+<div id="dlgUi" class="dlg-back" hidden>
+  <div class="dlg narrow" role="dialog" aria-modal="true" aria-labelledby="uiTitle">
+    <div class="dlg-head">
+      <h2 id="uiTitle">配色</h2>
+      <button class="btn dlg-close" type="button">閉じる</button>
+    </div>
+    <div class="dlg-body">
+      <section>
+        <h3>1. 配色</h3>
+        <div class="ui-grid">
+          <div id="uiColors" class="colors"></div>
+          <div>
+            <div class="note">プレビュー</div>
+            <table class="preview" id="uiPreview">
+              <tr class="pv-normal"><td>10/19 19:21</td><td>N8230Z0</td><td class="pv-next">L-3</td><td>H24</td></tr>
+              <tr class="pv-stripe"><td>10/19 19:32</td><td>L8141E0</td><td>ANI</td><td>H18</td></tr>
+              <tr class="pv-inspect"><td>10/19 19:43</td><td><span class="pv-itag">点検</span>点検板</td><td>-</td><td></td></tr>
+              <tr class="pv-stop"><td>10/19 19:54</td><td colspan="3"><span class="pv-stag">設備停止</span>ワークロール交換計画 7分</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h3>2. 点検行の判定</h3>
+        <p class="note">ロットNo または 用途名にこの文字を含み、板厚・幅のデータがある行を「点検」として扱います（1行に1語）。点検行は製造件数・ロット数・台帳突合せから除きます。</p>
+        <textarea id="uiKeywords" rows="3"></textarea>
+      </section>
+    </div>
+    <div class="dlg-foot">
+      <button id="uiReset" class="btn" type="button">初期値に戻す</button>
+      <span id="uiMsg" class="note"></span>
+      <button id="uiSave" class="btn primary" type="button">保存して反映</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ column designer ============ -->
+<div id="dlgCols" class="dlg-back" hidden>
+  <div class="dlg designer" role="dialog" aria-modal="true" aria-labelledby="cdTitle">
+    <div class="cd-head">
+      <div>
+        <div class="cd-sub">一覧の見せ方</div>
+        <h2 id="cdTitle">列の設定</h2>
+      </div>
+      <button id="cdClose" class="cd-x" type="button" title="閉じる（保存しない）">×</button>
+    </div>
+
+    <div class="cd-body">
+      <div class="cd-left">
+        <div class="cd-tools">
+          <input id="cdFilter" type="search" placeholder="列名で絞り込み">
+          <button id="cdAddCalc" class="btn" type="button">＋ 列を作る</button>
+          <button id="cdAutoWidth" class="btn" type="button" title="すべての列の幅を「自動」に戻します">幅を内容に合わせる</button>
+        </div>
+        <div id="cdChips" class="cd-chips"></div>
+        <div class="cd-bar">
+          <span class="pill map">変換表</span><span id="cdMapInfo"></span>
+          <button id="cdOpenMaps" class="btn small" type="button">変換表の一覧</button>
+          <span class="pill rule">色分け</span><span id="cdRuleInfo"></span>
+          <button id="cdOpenRules" class="btn small" type="button">ルールを設定</button>
+        </div>
+        <div class="cd-list-head">
+          <span><input id="cdAll" type="checkbox" title="表示中の一覧をまとめて表示／非表示"></span>
+          <span>列（<b>⠿</b> をドラッグで並べ替え）</span>
+          <span>表示名</span>
+          <span>見え方（実データ1件）</span>
+          <span></span>
+        </div>
+        <div id="cdList" class="cd-list"></div>
+      </div>
+
+      <div id="cdRight" class="cd-right"></div>
+    </div>
+
+    <div class="cd-foot">
+      <div class="cd-menu">
+        <button id="cdFileBtn" class="btn" type="button">設定ファイル ▾</button>
+        <div id="cdFileMenu" class="menu" hidden>
+          <button type="button" data-act="export">書き出し（JSONファイル）</button>
+          <button type="button" data-act="import">読み込み…</button>
+        </div>
+        <input id="cdImport" type="file" accept=".json,application/json" hidden>
+      </div>
+      <span id="cdCount" class="note"></span>
+      <span id="cdMsg" class="note grow"></span>
+      <button id="cdDefault" class="btn" type="button">既定に戻す</button>
+      <button id="cdCancel" class="btn" type="button">キャンセル</button>
+      <button id="cdSave" class="btn primary" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.APP = {
+    refreshSec: {{ refresh_sec | int }},
+    defaultSetsubi: {{ default_setsubi | tojson }},
+    lotUrlTemplate: {{ lot_url_template | tojson }},
+    cm3ViewUrlTemplate: {{ cm3_view_url_template | tojson }},
+    ui: {{ ui | tojson }},
+    uiDefault: {{ ui_default | tojson }},
+    hot: {{ hot | tojson }},
+    scheduleFields: {{ schedule_fields | tojson }},
+    scheduleColumns: {{ schedule_columns | tojson }},
+    view: {{ view | tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='expr.js') }}"></script>
+<script src="{{ url_for('static', filename='view.js') }}"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='designer.js') }}"></script>
+</body>
+</html>
