@@ -1,0 +1,7 @@
+# Python が試験・起動のときに作るキャッシュ（配る物にも入れない）
+__pycache__/
+*.pyc
+# Rust の作った物・作るたびに描くアイコン（build.rs が program/app/app_icon.py で描く）
+desktop/target/
+desktop/icons/
+desktop/splash/icon.png

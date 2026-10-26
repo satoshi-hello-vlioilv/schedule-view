@@ -143,7 +143,9 @@
       const m = json.master || {};
       const errs = (json.hot && json.hot.errors) || [];
       show("message", errs.length ? "一部の設備を取得できませんでした: " + errs.join(" / ") : "");
-      show("masterMsg", m.message ? "台帳: " + m.message : "");
+      show("masterMsg", m.loading ? "台帳を読み込んでいます（読み終わると自動で表示します）" : (m.message ? "台帳: " + m.message : ""));
+      // 台帳は exe が裏で読む。読み終わる前に開いた一覧は、少し待って読み直す（台帳の列が付く）
+      if (m.loading) setTimeout(() => { if (myId === state.reqId) load(false); }, 1500);
       rebuildView();
       if (isHot()) buildHotPanel(); else buildNextFilters();
       renderAll();

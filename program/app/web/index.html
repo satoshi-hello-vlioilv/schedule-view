@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CM3 スケジュールビューア</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="/static/style.css?v={{V}}">
 </head>
 <body>
 
@@ -12,14 +12,7 @@
   <div class="title"><h1>CM3 スケジュール</h1></div>
 
   <div class="controls">
-    <div class="tabs" id="equipTabs" role="tablist">
-      {% for e in equipments %}
-      <button type="button" class="tab" role="tab" data-code="{{ e.code }}" data-termkbn="{{ e.term_kbn }}">{{ e.name }}</button>
-      {% endfor %}
-      {% if hot.equipments %}
-      <button type="button" class="tab hot" role="tab" data-code="__HOT__" title="{{ hot.equipments | join('・') }} で前工程が HOT のロットを、作業予定順にまとめた一覧">{{ hot.title }}</button>
-      {% endif %}
-    </div>
+    <div class="tabs" id="equipTabs" role="tablist"></div>
 
     <label class="field grow">
       <span>検索</span>
@@ -28,7 +21,7 @@
 
     <label class="toggle">
       <input id="autoRefresh" type="checkbox" checked>
-      <span>自動更新 {{ refresh_sec }}秒</span>
+      <span id="autoRefreshLabel">自動更新</span>
     </label>
 
     <button id="btnRefresh" class="btn primary" type="button">更新</button>
@@ -240,22 +233,26 @@
 </div>
 
 <script>
-  window.APP = {
-    refreshSec: {{ refresh_sec | int }},
-    defaultSetsubi: {{ default_setsubi | tojson }},
-    lotUrlTemplate: {{ lot_url_template | tojson }},
-    cm3ViewUrlTemplate: {{ cm3_view_url_template | tojson }},
-    ui: {{ ui | tojson }},
-    uiDefault: {{ ui_default | tojson }},
-    hot: {{ hot | tojson }},
-    scheduleFields: {{ schedule_fields | tojson }},
-    scheduleColumns: {{ schedule_columns | tojson }},
-    view: {{ view | tojson }}
-  };
+  // 初めの値（設備・配色・列の設定など）は exe がこの下の行に埋める。設備のタブと自動更新の間隔をここで描く
+  window.APP = {{APP}};
+  (function () {
+    var A = window.APP, tabs = document.getElementById("equipTabs");
+    var btn = function (code, text, cls, extra) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = cls; b.setAttribute("role", "tab"); b.dataset.code = code; b.textContent = text;
+      Object.keys(extra || {}).forEach(function (k) { b.setAttribute(k, extra[k]); });
+      tabs.appendChild(b);
+    };
+    A.equipments.forEach(function (e) { btn(e.code, e.name, "tab", { "data-termkbn": e.term_kbn == null ? "" : e.term_kbn }); });
+    if (A.hot.equipments.length) {
+      btn("__HOT__", A.hot.title, "tab hot", { title: A.hot.equipments.join("・") + " で前工程が HOT のロットを、作業予定順にまとめた一覧" });
+    }
+    document.getElementById("autoRefreshLabel").textContent = "自動更新 " + A.refreshSec + "秒";
+  })();
 </script>
-<script src="{{ url_for('static', filename='expr.js') }}"></script>
-<script src="{{ url_for('static', filename='view.js') }}"></script>
-<script src="{{ url_for('static', filename='app.js') }}"></script>
-<script src="{{ url_for('static', filename='designer.js') }}"></script>
+<script src="/static/expr.js?v={{V}}"></script>
+<script src="/static/view.js?v={{V}}"></script>
+<script src="/static/app.js?v={{V}}"></script>
+<script src="/static/designer.js?v={{V}}"></script>
 </body>
 </html>

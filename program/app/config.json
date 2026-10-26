@@ -6,9 +6,21 @@
   "client_ip": "150.150.107.35",
   "default_setsubi": "L-2",
   "equipments": [
-    { "code": "L-1", "name": "L-1", "term_kbn": "4" },
-    { "code": "L-2", "name": "L-2", "term_kbn": "4" },
-    { "code": "L-3", "name": "L-3", "term_kbn": "4" }
+    {
+      "code": "L-1",
+      "name": "L-1",
+      "term_kbn": "4"
+    },
+    {
+      "code": "L-2",
+      "name": "L-2",
+      "term_kbn": "4"
+    },
+    {
+      "code": "L-3",
+      "name": "L-3",
+      "term_kbn": "4"
+    }
   ],
   "master": {
     "enabled": true,
@@ -32,7 +44,8 @@
   "use_system_proxy": false,
   "cache_sec": 10,
   "auto_refresh_sec": 60,
-  "host": "127.0.0.1",
-  "port": 5000,
-  "open_browser": true
+  "settings_dir": "",
+  "update": {
+    "source": ""
+  }
 }

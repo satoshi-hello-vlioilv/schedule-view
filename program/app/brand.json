@@ -1,0 +1,9 @@
+{
+  "_about": "アプリの名前（1か所の定義）。name・subtitle・exe は変えてよい（exe を変えたら desktop/Cargo.toml の [[bin]] name と desktop/tauri.conf.json の mainBinaryName、name を変えたら productName も同じにする。desktop/src/brand.rs と tests/test_brand.py が食い違いを止める）。app_id は変えない（更新の置き場で「このアプリの版」を見分ける・WebView の保存先）。data_dir はこの PC の作業場所（%LOCALAPPDATA% の下）のフォルダ名。",
+  "name": "ScheduleView",
+  "title": "CM3 スケジュールビューア",
+  "subtitle": "CM3 のスケジュールと仕掛台帳",
+  "exe": "ScheduleView.exe",
+  "app_id": "local.cm3scheduleviewer.desktop",
+  "data_dir": "ScheduleView"
+}
