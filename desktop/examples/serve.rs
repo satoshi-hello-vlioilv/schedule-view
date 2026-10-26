@@ -4,6 +4,7 @@
 //!   作り物で: python program/tools/mock_cm3.py <fixture のフォルダ> &  のあと、config.json の cm3_base_url を作り物へ向ける
 //!
 //! 環境変数 SV_FIXTURE=<fixture のフォルダ> を渡すと、作り物の CM3 を中で起こし、台帳もそのフォルダの物を使う（撮影の道具が使う）。
+//! SV_FAKE_DESKTOP=ready|latest を渡すと、窓の係（/__desktop/…）に作り物の答えを返す（画面の版の札・知らせの帯・係・配布の窓を撮るため）。
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -44,7 +45,7 @@ fn main() {
             let url = rq.url().to_string();
             let (path, query) = url.split_once('?').unwrap_or((&url, ""));
             let method = rq.method().as_str().to_string();
-            let r = app.handle(&Request { method: &method, path, query, body: &body });
+            let r = fake_desktop(&method, path).unwrap_or_else(|| app.handle(&Request { method: &method, path, query, body: &body }));
             let mut resp = tiny_http::Response::from_data(r.body).with_status_code(r.status);
             resp.add_header(tiny_http::Header::from_bytes("Content-Type", r.ctype.as_bytes()).unwrap());
             for (k, v) in r.headers {
@@ -55,4 +56,32 @@ fn main() {
             let _ = rq.respond(resp);
         });
     }
+}
+
+/// 窓の係の作り物の答え（SV_FAKE_DESKTOP。ready＝新しい版 12.0.1 を取り込み済み・latest＝最新）。
+fn fake_desktop(method: &str, path: &str) -> Option<sv_core::app::Reply> {
+    use serde_json::json;
+    let mode = std::env::var("SV_FAKE_DESKTOP").ok()?;
+    if !path.starts_with("/__desktop/") {
+        return None;
+    }
+    let ready = mode == "ready";
+    let v = match (method, path) {
+        ("GET", "/__desktop/info") => json!({"version": "12.0.0", "installed": true}),
+        ("GET", "/__desktop/update") => json!({"state": if ready { "ready" } else { "latest" }, "ready": if ready { json!("12.0.1") } else { json!(null) },
+                                                "current": "12.0.0", "checkedAt": "2026-10-26 16:30", "failed": [], "installed": true}),
+        ("GET", "/__desktop/install") => json!({"installed": true, "appDir": "C:\\Users\\user\\AppData\\Local\\ScheduleView\\app",
+            "shortcut": {"ask": false, "declined": false, "links": [], "places": ["C:\\Users\\user\\Desktop", "C:\\Users\\user\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"]}}),
+        ("GET", "/__desktop/release") => json!({"reachable": true, "found": "\\\\srv\\share\\Releases", "adjusted": false,
+            "distributed": {"version": "12.0.0", "previous": "11.0.0"},
+            "entry": {"exists": true, "path": "\\\\srv\\share\\Releases\\ScheduleView\\ScheduleView.exe"},
+            "versions": [
+                {"version": "12.0.1", "placedAt": "2026-10-26T16:20:00", "placedBy": "admin", "bytes": 9_400_000},
+                {"version": "12.0.0", "placedAt": "2026-10-20T09:00:00", "placedBy": "admin", "bytes": 9_300_000},
+                {"version": "11.0.0", "placedAt": "2026-10-19T09:00:00", "placedBy": "admin", "bytes": 9_100_000}],
+            "problems": []}),
+        ("GET", "/__desktop/release/progress") => json!({"state": "idle"}),
+        _ => json!({"ok": true}),
+    };
+    Some(sv_core::app::Reply::json(200, &v))
 }

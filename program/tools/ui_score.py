@@ -18,7 +18,7 @@
 
     "baseline" は比べるための今の画面（案ではないので順位に入れない。どれだけ良くなるかを見る）。
     "built" は、決めた案を作った後の本物の画面を、同じ物差しで採点した結果（作る前の画像の再現と本物の差を見る）。
-    "applies": "決めた採点のファイル名" … ほかの比較で決めた形を、別の画面にそろえて当てただけのとき（案出しの回は持たず、
+    "applies": "決めた採点のファイル名" … ほかの比較で決めた形を、別の画面にそろえて当てただけのとき（旧い決まりの記録の 1 位も当てられる。案出しの回は持たず、
     "rounds" は空）。決めたファイルの判定を引き、"baseline"（今）と "built"（作った後）だけを同じ物差しで採点する（版 3.49.0）。
     案の値が 7 つの数の並び（list）のファイルは、旧い決まり（7 基準・80 点・7 案）の記録として読む（判定はしない）。
 
@@ -238,7 +238,8 @@ def report_applied(data):
     src = os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), data["applies"])
     with open(src, encoding="utf-8") as f:
         kind, who, rows = decide(json.load(f))
-    if kind not in ("選ぶ", "届かずに選ぶ"):
+    # 「記録」は旧い決まりで選んだ形の記録（別リポジトリ LotScope で選んだ起動画面など）。その 1 位を当てた元として読む
+    if kind not in ("選ぶ", "届かずに選ぶ", "記録"):
         raise ValueError(f"{data['applies']} はまだ決まっていない（{kind}）")
     print(f"採点: {data['evaluator']}\n当てた形: {data['applies']} で決めた {who}（{rows[0][0]:.1f} 点）")
     mark = rule_of(data)["pass"][-1]

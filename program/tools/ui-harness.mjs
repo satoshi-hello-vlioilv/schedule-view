@@ -51,7 +51,7 @@ export async function launch({ url } = {}) {
     const r = spawnSync(py, [path.join(REPO, "program", "tools", "fixture.py"), path.join(tmp, "data")], { encoding: "utf8" });
     if (r.status !== 0) throw new Error(`fixture.py: ${r.stderr}`);
     const port = 18000 + Math.floor(Math.random() * 1000);
-    child = spawn(exe, [String(port), "", path.join(tmp, "work")], { env: { ...process.env, SV_FIXTURE: path.join(tmp, "data") }, stdio: "ignore" });
+    child = spawn(exe, [String(port), "", path.join(tmp, "work")], { env: { SV_FAKE_DESKTOP: "ready", ...process.env, SV_FIXTURE: path.join(tmp, "data") }, stdio: "ignore" });
     base = `http://127.0.0.1:${port}`;
   }
   base = base.replace(/\/$/, "");
@@ -85,6 +85,7 @@ async function settled(page) {
 /**
  * 状態をたどりながら撮る。shot(名前) を状態ごとに呼ぶ。
  * line: 設備の一覧（L-2）・hot: HOT コイル作業順・cols: 列の設定・master: 台帳設定・ui: 配色
+ * app: 版の札の係を開いた所・release: 版の配布の窓・shortcut: ショートカットの問い（窓の係は開発用の受け口の作り物の答え。SV_FAKE_DESKTOP）
  */
 export async function walk(page, base, shot, only = null) {
   const want = (n) => !only || only.includes(n);
@@ -110,6 +111,17 @@ export async function walk(page, base, shot, only = null) {
   await dialog("cols", "#btnCols", "#dlgCols", "#cdCancel");
   await dialog("master", "#btnMaster", "#dlg", "#dlg .dlg-close");
   await dialog("ui", "#btnUi", "#dlgUi", "#dlgUi .dlg-close");
+  const desk = async (name, open, close) => {
+    if (!want(name) || !(await page.evaluate(() => !!window.SVDesktop && !!document.getElementById("appChip")))) return;
+    await page.evaluate(open);
+    await sleep(700);
+    await shot(name);
+    await page.evaluate(close);
+    await sleep(200);
+  };
+  await desk("app", () => SVDesktop.toggleMenu(), () => document.getElementById("appMenu") && SVDesktop.toggleMenu());
+  await desk("release", () => SVDesktop.openRelease(), () => document.getElementById("appRelease").remove());
+  await desk("shortcut", () => SVDesktop.askShortcut(), () => document.getElementById("appShortcut").remove());
 }
 
 /** 迷いやすさに関わる量（page.evaluate に渡す） */

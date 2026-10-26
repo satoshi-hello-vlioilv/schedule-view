@@ -20,20 +20,28 @@
 
   const st = { info: null, upd: null, install: null, asked: false };
 
-  // ------------------------------------------------------------ 版の札と開き直すボタン
+  // ------------------------------------------------------------ 版の札（題の下）と知らせの帯（上の帯のすぐ下・更新ありのときだけ）
+  const DISMISS = "sv.updateLater";   // 「あとで」を押した版（その版の間は帯を出さない。札には字で残す）
+  const later = () => { try { return sessionStorage.getItem(DISMISS); } catch (e) { return null; } };
+
   function renderChip() {
-    const slot = $("appSlot");
+    const slot = $("appSlot"), strip = $("appStrip");
     if (!slot || !st.info) return;
     const u = st.upd || {};
     const ready = u.state === "ready" && u.ready;
     const dot = st.install && st.install.shortcut && st.install.shortcut.ask ? '<span class="app-dot" title="ショートカットがありません"></span>' : "";
     slot.hidden = false;
-    slot.innerHTML =
-      '<button type="button" class="app-chip' + (ready ? " has" : "") + '" id="appChip" aria-haspopup="menu" aria-expanded="false" title="版・更新・ショートカット・版の配布">' +
-      "版 " + esc(st.info.version) + " ▾" + dot + "</button>" +
-      (ready ? '<button type="button" class="app-go" id="appGo" title="新しい版 ' + esc(u.ready) + ' を取り込みました。開き直すと入れ替わります">' + REOPEN + "</button>" : "");
+    slot.innerHTML = '<button type="button" class="app-chip' + (ready ? " has" : "") + '" id="appChip" aria-haspopup="menu" aria-expanded="false" ' +
+      'title="版・更新・ショートカット・版の配布">版 ' + esc(st.info.version) + (ready ? "・更新あり" : "・アプリ") + " ▾" + dot + "</button>";
     $("appChip").onclick = (e) => { e.stopPropagation(); toggleMenu(); };
-    if (ready) $("appGo").onclick = reopen;
+    const show = ready && later() !== u.ready;
+    strip.hidden = !show;
+    strip.innerHTML = show ? "<b>新しい版 " + esc(u.ready) + " を取り込みました。</b><span>開き直すと入れ替わります（いまの版 " + esc(st.info.version) + "）</span>" +
+      '<button type="button" class="app-go" id="appGo">' + REOPEN + '</button><button type="button" class="app-later" id="appLater">あとで</button>' : "";
+    if (show) {
+      $("appGo").onclick = reopen;
+      $("appLater").onclick = () => { try { sessionStorage.setItem(DISMISS, u.ready); } catch (e) { /* 覚えられなくても閉じる */ } renderChip(); };
+    }
   }
 
   async function reopen() {
@@ -227,6 +235,9 @@
     renderChip();
     if (!st.asked) { st.asked = true; askShortcut(false); }
   }
+
+  // 撮影の道具（program/tools/ui-harness.mjs）が係の状態をたどるための口
+  window.SVDesktop = { toggleMenu, openRelease, askShortcut: () => askShortcut(true) };
 
   (async () => {
     try { st.info = await get("/__desktop/info"); } catch (e) { return; }   // 窓の外（開発用の受け口）

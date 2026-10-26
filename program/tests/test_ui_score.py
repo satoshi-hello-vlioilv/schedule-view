@@ -123,6 +123,26 @@ class UiScore(unittest.TestCase):
         d["built"]["result"]["minus"] = [{"kind": "cut", "where": "w"}] * 3
         self.assertEqual(ui.decide(d)[0], "直す")
 
+    def test_applies_can_point_at_an_old_record(self):
+        """旧い決まりの記録（7 基準の数の並び）の 1 位も、当てた元として読める（LotScope で選んだ起動画面）"""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            src = Path(d) / "old.json"
+            src.write_text(json.dumps({"title": "old", "rounds": [{"name": "1", "proposals": {"Q": [9] * 7, "R": [5] * 7}}]}), encoding="utf-8")
+            good = {k: 9 for k in ui.KEYS}
+            data = {"title": "t", "rule": "2026-10-17", "evaluator": "e", "applies": "old.json", "rounds": [],
+                    "built": {"name": "作った後", "result": {"score": good, "seen": "s"}}}
+            argv = ui.sys.argv
+            ui.sys.argv = ["ui_score.py", str(Path(d) / "new.json")]
+            try:
+                import contextlib
+                import io
+                with contextlib.redirect_stdout(io.StringIO()):
+                    kind, who = ui.report_applied(data)
+            finally:
+                ui.sys.argv = argv
+            self.assertEqual((kind, who), ("当てた", "Q"))
+
     def test_old_records_still_read(self):
         """旧い決まり（7 基準の数の並び）の記録も読める（判定はしない）"""
         for path in (Path(__file__).resolve().parents[1] / "tools" / "ui-proposals").glob("*.json"):

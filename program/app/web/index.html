@@ -9,7 +9,7 @@
 <body>
 
 <header class="topbar">
-  <div class="title"><h1>CM3 スケジュール</h1></div>
+  <div class="title"><h1>CM3 スケジュール</h1><div id="appSlot" class="app-slot" hidden></div></div>
 
   <div class="controls">
     <div class="tabs" id="equipTabs" role="tablist"></div>
@@ -33,6 +33,8 @@
     <a id="lnkCm3" class="btn ghost" target="_blank" rel="noopener">CM3画面を開く</a>
   </div>
 </header>
+<!-- 新しい版を取り込んだときだけ出る細い帯（desktop.js。exe の窓の中だけ） -->
+<div id="appStrip" class="app-strip" role="status" hidden></div>
 
 <section class="summary" id="lineSummary">
   <div class="card"><div class="label">製造件数</div><div class="value" id="sumCount">-</div></div>
@@ -254,5 +256,6 @@
 <script src="/static/view.js?v={{V}}"></script>
 <script src="/static/app.js?v={{V}}"></script>
 <script src="/static/designer.js?v={{V}}"></script>
+<script src="/static/desktop.js?v={{V}}"></script>
 </body>
 </html>
