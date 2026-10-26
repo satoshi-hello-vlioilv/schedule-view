@@ -397,8 +397,8 @@ td a:hover { text-decoration: underline; }
 .dlg.app-narrow { width: min(560px, 94vw); }
 .app-list { margin: 4px 0 8px; padding-left: 20px; font-size: 13px; word-break: break-all; }
 .app-warn { color: var(--warn); background: var(--warn-bg); padding: 8px 12px; border-radius: 6px; }
-.app-flow { list-style: none; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 12px; padding: 0; margin: 12px 0; }
-.app-flow li { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+.app-flow { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 12px; padding: 0; margin: 12px 0; }
+.app-flow li { min-width: 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
 .app-flow li span { color: var(--muted); font-size: 12px; }
 .app-flow code { display: block; max-width: 100%; box-sizing: border-box; font-size: 12px; white-space: nowrap; overflow-x: auto; background: #f5f7f9; padding: 2px 6px; border-radius: 4px; }
 .app-versions { width: 100%; font-size: 13px; border-collapse: collapse; }
