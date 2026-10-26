@@ -106,13 +106,21 @@ def check(cond: bool, what: str, info="") -> bool:
     return bool(cond)
 
 
+def _ascii_twin(link: Path) -> Path:
+    """WScript.Shell は lnk の名前を ANSI のコードページで扱い、英語の Windows（CI）では日本語の名前を保存・読み込みできない。
+    同じフォルダの ASCII の名前で作業し、名前の付け替えと写しは Python（Unicode）で行う。"""
+    return link.with_name("sv-verify-tmp.lnk")
+
+
 def make_link(link: Path, target: Path, workdir: Path) -> None:
     """人が作ったショートカットを真似る（Windows は WScript.Shell、ほかは窓の lnk.rs と同じ小さな JSON）。"""
     link.parent.mkdir(parents=True, exist_ok=True)
     if os.name == "nt":
-        ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');$s.TargetPath='{target}';"
+        twin = _ascii_twin(link)
+        ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{twin}');$s.TargetPath='{target}';"
               f"$s.WorkingDirectory='{workdir}';$s.Save()")
         subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=True)
+        os.replace(twin, link)
     else:
         link.write_text(json.dumps({"target": str(target), "workdir": str(workdir), "description": ""}), encoding="utf-8")
 
@@ -122,8 +130,13 @@ def read_link(link: Path):
     if not link.exists():
         return None
     if os.name == "nt":
-        ps = f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{link}');$s.TargetPath;$s.WorkingDirectory"
-        out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True).stdout.splitlines()
+        twin = _ascii_twin(link)
+        shutil.copyfile(link, twin)
+        try:
+            ps = f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{twin}');$s.TargetPath;$s.WorkingDirectory"
+            out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True).stdout.splitlines()
+        finally:
+            twin.unlink(missing_ok=True)
         return (Path(out[0]), Path(out[1])) if len(out) >= 2 else None
     v = json.loads(link.read_text(encoding="utf-8"))
     return Path(v["target"]), Path(v["workdir"])
