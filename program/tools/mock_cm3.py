@@ -17,7 +17,7 @@ from pathlib import Path
 
 def make_handler(folder: Path, delay: float):
     class Handler(BaseHTTPRequestHandler):
-        def do_POST(self):  # noqa: N802（http.server の決まりの名前）
+        def do_POST(self):  # noqa: N802 (http.server の決まりの名前)
             body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
             try:
                 eq = json.loads(body.decode("utf-8")).get("setsubiName") or ""

@@ -4,8 +4,8 @@
 //! 試験と開発のため、置き場は環境変数 SV_LINK_DIRS（「;」区切り）で差し替えられる（そのときピン留めは見ない）。Windows 以外では
 //! .lnk の代わりに指す先・作業フォルダ・アイコンを書いた小さな JSON を置く（Linux の本物の窓で決まりを通しで確かめるため。配る物は Windows だけ）。
 
-use sv_core::install::{Link, LinkIo};
 use std::path::{Path, PathBuf};
+use sv_core::install::{Link, LinkIo};
 
 pub struct OsLinks;
 
@@ -39,8 +39,8 @@ impl LinkIo for OsLinks {
 
 #[cfg(windows)]
 mod imp {
-    use sv_core::install::Link;
     use std::path::{Path, PathBuf};
+    use sv_core::install::Link;
     use windows::core::{Interface, HSTRING, PWSTR};
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CoTaskMemFree, CoUninitialize, IPersistFile, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
@@ -118,9 +118,9 @@ mod imp {
 
 #[cfg(not(windows))]
 mod imp {
-    use sv_core::install::Link;
     use serde_json::json;
     use std::path::{Path, PathBuf};
+    use sv_core::install::Link;
 
     pub fn make(link: &Path, to: &Link, description: &str) -> Result<(), String> {
         let v = json!({"target": to.target, "workdir": to.workdir, "icon": to.icon, "description": description});

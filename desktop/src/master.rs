@@ -17,8 +17,20 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
 
 /// 「ロット番号」として扱う列名（そろえてから比べる）
-const KEY_NAME_CANDIDATES: [&str; 12] =
-    ["ロット番号", "ﾛｯﾄ番号", "ロットNo", "ﾛｯﾄNo", "ロットNO", "ロットＮｏ", "ロットNO.", "ロット", "LotNo", "LOT_NO", "LOTNO", "Lot Number"];
+const KEY_NAME_CANDIDATES: [&str; 12] = [
+    "ロット番号",
+    "ﾛｯﾄ番号",
+    "ロットNo",
+    "ﾛｯﾄNo",
+    "ロットNO",
+    "ロットＮｏ",
+    "ロットNO.",
+    "ロット",
+    "LotNo",
+    "LOT_NO",
+    "LOTNO",
+    "Lot Number",
+];
 /// 列の判定で見る行の数（頭から）
 const SAMPLE: usize = 3000;
 
@@ -271,7 +283,7 @@ impl Snapshot {
     /// すべての表・列を調べる（列ごとに糸を分ける）。
     fn all_stats(&self, lots: Option<&HashSet<String>>) -> Vec<Value> {
         let jobs: Vec<(&str, usize)> = self.tables.iter().flat_map(|(t, tb)| (0..tb.columns.len()).map(move |c| (t.as_str(), c))).collect();
-        let workers = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).min(8).max(1);
+        let workers = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8);
         let chunk = jobs.len().div_ceil(workers).max(1);
         std::thread::scope(|s| {
             let handles: Vec<_> = jobs
@@ -321,7 +333,8 @@ impl Snapshot {
                 bad.push(if given.is_empty() { "(自動)".to_string() } else { given });
             }
         }
-        let warn = if bad.is_empty() { String::new() } else { format!("台帳に無いキー列を除外しました: {}", bad.join(", ")) };
+        let warn =
+            if bad.is_empty() { String::new() } else { format!("台帳に無いキー列を除外しました: {}", bad.join(", ")) };
         if pairs.is_empty() && table == self.auto_table && !self.auto_key.is_empty() {
             pairs = vec![("lotNo".into(), self.auto_key.clone())];
         }
@@ -376,8 +389,7 @@ fn read_table(con: &rusqlite::Connection, path: &Path, name: &str, columns: Vec<
     let all = format!("SELECT * FROM {}", q(name));
     let n = con.prepare(&all)?.column_count();
     // SELECT * の列（PRAGMA table_info と同じ数のはず。違えば SELECT * の方に合わせる）
-    let columns =
-        if columns.len() == n { columns } else { con.prepare(&all)?.column_names().iter().map(|s| s.to_string()).collect() };
+    let columns = if columns.len() == n { columns } else { con.prepare(&all)?.column_names().iter().map(|s| s.to_string()).collect() };
     let span: Option<(i64, i64, i64)> = con
         .query_row(&format!("SELECT min(rowid), max(rowid), count(*) FROM {}", q(name)), [], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
         .ok()
@@ -764,7 +776,8 @@ impl LotMaster {
         let s = self.snapshot();
         let st = self.status.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let created = s.meta.iter().find(|(k, _)| k == "作成日時").map(|(_, v)| v.replace('T', " ").replace('-', "/")).unwrap_or_default();
-        let message = [st.message.as_str(), s.key_warning.as_str()].iter().filter(|x| !x.is_empty()).copied().collect::<Vec<_>>().join(" / ");
+        let message =
+            [st.message.as_str(), s.key_warning.as_str()].iter().filter(|x| !x.is_empty()).copied().collect::<Vec<_>>().join(" / ");
         json!({"state": st.state, "message": message, "keyLabel": s.key_label(), "copiedAt": st.copied_at, "created": created,
                "rowCount": s.row_count(), "loading": self.loading()})
     }

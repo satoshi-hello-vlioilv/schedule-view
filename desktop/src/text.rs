@@ -64,8 +64,18 @@ pub fn display_value(v: &str) -> String {
     let b = s.as_bytes();
     let dig = |r: std::ops::Range<usize>| r.clone().all(|i| b[i].is_ascii_digit());
     // YYYY-MM-DD HH:MM:SS（19 文字）
-    if b.len() == 19 && dig(0..4) && b[4] == b'-' && dig(5..7) && b[7] == b'-' && dig(8..10) && b[10] == b' ' && dig(11..13) && b[13] == b':'
-        && dig(14..16) && b[16] == b':' && dig(17..19)
+    if b.len() == 19
+        && dig(0..4)
+        && b[4] == b'-'
+        && dig(5..7)
+        && b[7] == b'-'
+        && dig(8..10)
+        && b[10] == b' '
+        && dig(11..13)
+        && b[13] == b':'
+        && dig(14..16)
+        && b[16] == b':'
+        && dig(17..19)
     {
         let date = format!("{}/{}/{}", &s[0..4], &s[5..7], &s[8..10]);
         if &s[11..19] == "00:00:00" {

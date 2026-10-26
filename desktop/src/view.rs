@@ -91,7 +91,16 @@ fn col(id: &str, source: &str, field: &str, kw: &[(&str, Value)]) -> Value {
 
 /// 前工程 = 実績_設備ｺｰｽ（空白区切り）の最後。
 fn prev_process_col(hot: &Hot) -> Value {
-    col("c:prev", "calc", "", &[("label", json!("前工程")), ("align", json!("center")), ("expr", json!(format!("split([{}],\" \",-1)", hot.result_course_column)))])
+    col(
+        "c:prev",
+        "calc",
+        "",
+        &[
+            ("label", json!("前工程")),
+            ("align", json!("center")),
+            ("expr", json!(format!("split([{}],\" \",-1)", hot.result_course_column))),
+        ],
+    )
 }
 
 /// 設計_PIT炉番炉順 を「釜番」として。
@@ -148,7 +157,8 @@ pub fn migrate_view(v: &mut Value, hot: &Hot) -> bool {
     }
     let Some(cols) = v.get_mut("columns").and_then(Value::as_array_mut) else { return false };
     let pos = cols.iter().position(|c| c["id"] == "s:passNo").map(|i| i + 1).unwrap_or(cols.len());
-    let has_prev = cols.iter().any(|c| c["id"] == "c:prev" || (c["source"] == "calc" && c["label"].as_str().unwrap_or("").trim() == "前工程"));
+    let has_prev =
+        cols.iter().any(|c| c["id"] == "c:prev" || (c["source"] == "calc" && c["label"].as_str().unwrap_or("").trim() == "前工程"));
     let kid = format!("m:{}", hot.kama_column);
     let mut add = vec![];
     if !has_prev {
@@ -174,7 +184,9 @@ pub fn valid_view(v: &Value) -> &'static str {
     let Some(cols) = o.get("columns").and_then(Value::as_array).filter(|c| !c.is_empty()) else { return "列がありません" };
     let mut ids = HashSet::new();
     for c in cols {
-        let ok = c.is_object() && matches!(c["source"].as_str(), Some("schedule" | "master" | "calc")) && c.get("id").is_some_and(crate::pyfmt::truthy);
+        let ok = c.is_object()
+            && matches!(c["source"].as_str(), Some("schedule" | "master" | "calc"))
+            && c.get("id").is_some_and(crate::pyfmt::truthy);
         if !ok {
             return "列の形式が不正です";
         }

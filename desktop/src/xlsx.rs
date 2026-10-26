@@ -113,6 +113,7 @@ impl Styles {
         self.numfmts.push((code.to_string(), id));
         id
     }
+    #[allow(clippy::too_many_arguments)] // 旧版の xf(color, bold, bg, fmt, border, align, wrap) と同じ並び
     fn xf(&mut self, color: &str, bold: bool, bg: &str, fmt: &str, border: u32, align: &str, wrap: bool) -> usize {
         let k = Xf { font: self.font(color, bold), fill: self.fill(bg), numfmt: self.numfmt(fmt), border, align: align.into(), wrap };
         match self.xfs.iter().position(|f| *f == k) {
@@ -152,7 +153,9 @@ impl Styles {
             o += &match f.as_str() {
                 "" => "<fill><patternFill patternType=\"none\"/></fill>".to_string(),
                 "gray125" => "<fill><patternFill patternType=\"gray125\"/></fill>".to_string(),
-                c => format!("<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{c}\"/><bgColor indexed=\"64\"/></patternFill></fill>"),
+                c => {
+                    format!("<fill><patternFill patternType=\"solid\"><fgColor rgb=\"{c}\"/><bgColor indexed=\"64\"/></patternFill></fill>")
+                }
             };
         }
         o += "</fills>";
@@ -290,7 +293,10 @@ pub fn parts(data: &Value, created: &str) -> Result<Vec<(&'static str, String)>,
                 if blank {
                     sd += &format!("<c r=\"{r}\" s=\"{xf}\"/>");
                 } else {
-                    sd += &format!("<c r=\"{r}\" s=\"{xf}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{}</t></is></c>", x(&crate::pyfmt::json_py_str(v)));
+                    sd += &format!(
+                        "<c r=\"{r}\" s=\"{xf}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{}</t></is></c>",
+                        x(&crate::pyfmt::json_py_str(v))
+                    );
                 }
             }
         }
@@ -315,12 +321,17 @@ xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">
 {cols}<sheetData>{sd}</sheetData><autoFilter ref=\"A1:{last}{nrow}\"/>"
     );
     if !merges.is_empty() {
-        sheet += &format!("<mergeCells count=\"{}\">{}</mergeCells>", merges.len(), merges.iter().map(|m| format!("<mergeCell ref=\"{m}\"/>")).collect::<String>());
+        sheet += &format!(
+            "<mergeCells count=\"{}\">{}</mergeCells>",
+            merges.len(),
+            merges.iter().map(|m| format!("<mergeCell ref=\"{m}\"/>")).collect::<String>()
+        );
     }
     sheet += "<pageMargins left=\"0.4\" right=\"0.4\" top=\"0.5\" bottom=\"0.5\" header=\"0.3\" footer=\"0.3\"/>";
     sheet += "<pageSetup paperSize=\"9\" orientation=\"landscape\" fitToWidth=\"1\" fitToHeight=\"0\"/>";
     if !footer.is_empty() {
-        sheet += &format!("<headerFooter><oddFooter>&amp;L{}&amp;R&amp;P / &amp;N</oddFooter></headerFooter>", x(&footer.replace('&', "&&")));
+        sheet +=
+            &format!("<headerFooter><oddFooter>&amp;L{}&amp;R&amp;P / &amp;N</oddFooter></headerFooter>", x(&footer.replace('&', "&&")));
     }
     sheet += "</worksheet>";
     let qname = format!("'{}'", name.replace('\'', "''"));
@@ -378,7 +389,10 @@ mod tests {
 
     #[test]
     fn letters_and_names() {
-        assert_eq!((col_letter(0), col_letter(25), col_letter(26), col_letter(701), col_letter(702)), ("A".into(), "Z".into(), "AA".into(), "ZZ".into(), "AAA".into()));
+        assert_eq!(
+            (col_letter(0), col_letter(25), col_letter(26), col_letter(701), col_letter(702)),
+            ("A".into(), "Z".into(), "AA".into(), "ZZ".into(), "AAA".into())
+        );
         assert_eq!(sheet_name("L-3:[試]/?*"), "L-3__試____");
         assert_eq!(sheet_name("''"), "Sheet1");
     }

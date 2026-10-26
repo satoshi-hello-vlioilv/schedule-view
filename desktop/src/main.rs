@@ -166,9 +166,7 @@ impl Shell {
                 reply_of(install::make(&self.upd.paths, &lnk::places(), &lnk::OsLinks, &names()).map_err(|e| (400, e)))
             }
             ("POST", "/__desktop/shortcut/decline") => reply_of(install::decline(&self.upd.paths).map_err(|e| (500, e))),
-            ("GET", "/__desktop/release") => {
-                json_reply(&self.upd.release_view(q.iter().any(|(k, v)| k == "cached" && v == "1")))
-            }
+            ("GET", "/__desktop/release") => json_reply(&self.upd.release_view(q.iter().any(|(k, v)| k == "cached" && v == "1"))),
             ("GET", "/__desktop/release/progress") => json_reply(&self.upd.place_progress()),
             ("POST", "/__desktop/release/place") => {
                 let name = q.iter().find(|(k, _)| k == "name").map(|(_, v)| v.clone()).unwrap_or_default();
@@ -197,7 +195,9 @@ impl Shell {
 
 /// 答え → Tauri の答え。
 fn to_response(r: Reply) -> Response<Vec<u8>> {
-    let mut b = Response::builder().status(StatusCode::from_u16(r.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)).header("Content-Type", r.ctype);
+    let mut b = Response::builder()
+        .status(StatusCode::from_u16(r.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
+        .header("Content-Type", r.ctype);
     for (k, v) in r.headers {
         b = b.header(k, v);
     }
@@ -231,7 +231,13 @@ fn spawn_entry(paths: &Paths) -> Result<(), String> {
 fn names() -> install::Names<'static> {
     static LEGACY: OnceLock<Vec<String>> = OnceLock::new();
     let b = brand();
-    install::Names { name: &b.title, exe: &b.exe, description: &b.subtitle, legacy: LEGACY.get_or_init(Vec::new), icon: shortcut_icon().clone() }
+    install::Names {
+        name: &b.title,
+        exe: &b.exe,
+        description: &b.subtitle,
+        legacy: LEGACY.get_or_init(Vec::new),
+        icon: shortcut_icon().clone(),
+    }
 }
 
 /// exe に入れたアイコンの絵（build.rs が program/app/app_icon.py で描く）。
@@ -394,7 +400,9 @@ fn launch_update(app: &AppHandle, splash: &Splash, paths: &Paths, source: &str, 
     match update::launch_check(paths, &source, &brand().app_id, &current, LAUNCH_CHECK_WAIT, &progress) {
         update::Launch::Staged(v) => log(&format!("UPDATE 起動の最初に版 {v} を取り込みました")),
         update::Launch::Nothing(why) => log(&format!("UPDATE 起動の最初の確かめ: {why}")),
-        update::Launch::Slow => log(&format!("UPDATE 起動の最初の確かめ: 置き場に {} 秒で届かないので、裏で確かめます", LAUNCH_CHECK_WAIT.as_secs())),
+        update::Launch::Slow => {
+            log(&format!("UPDATE 起動の最初の確かめ: 置き場に {} 秒で届かないので、裏で確かめます", LAUNCH_CHECK_WAIT.as_secs()))
+        }
         update::Launch::Failed(e) => {
             log(&format!("UPDATE 起動の最初の確かめ: {e}"));
             notes.push(format!("{e}（使っている間に、もう一度試します）"));
@@ -461,7 +469,10 @@ fn start(app: AppHandle, slot: Arc<OnceLock<Shell>>, splash: Arc<Splash>) {
     splash.step(&app, "data", "now", "設定と台帳を読んでいます…");
     let t0 = Instant::now();
     let checked = if program.join("app").join("web").join("index.html").is_file() {
-        App::new(sv_core::app::Paths { program: program.clone(), local_root: locate::local_root(), config: config.clone() }, build_mark(&version))
+        App::new(
+            sv_core::app::Paths { program: program.clone(), local_root: locate::local_root(), config: config.clone() },
+            build_mark(&version),
+        )
     } else {
         Err(format!("画面（{}）がありません", program.join("app").join("web").join("index.html").display()))
     };

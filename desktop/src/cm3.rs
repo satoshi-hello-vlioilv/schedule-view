@@ -68,12 +68,8 @@ pub fn fetch_raw(ep: &Endpoint, setsubi: &str, term_kbn: &str) -> Result<Value, 
     let base = ep.base_url.trim_end_matches('/');
     let body = serde_json::to_vec(&build_payload(setsubi, term_kbn, &ep.client_ip)).unwrap_or_default();
     let proxy = if ep.use_system_proxy { ureq::Proxy::try_from_env() } else { None };
-    let agent: ureq::Agent = ureq::Agent::config_builder()
-        .http_status_as_error(false)
-        .timeout_global(Some(ep.timeout))
-        .proxy(proxy)
-        .build()
-        .into();
+    let agent: ureq::Agent =
+        ureq::Agent::config_builder().http_status_as_error(false).timeout_global(Some(ep.timeout)).proxy(proxy).build().into();
     let sent = agent
         .post(&format!("{base}{}", ep.init_path))
         .header("Accept", "application/json, text/plain, */*")
@@ -102,7 +98,8 @@ pub fn fetch_raw(ep: &Endpoint, setsubi: &str, term_kbn: &str) -> Result<Value, 
 // ---------------------------------------------------------------- 行の区分
 
 /// 製造行なら必ずある項目（8 つ）と、板厚・幅（数のはずの 5 つ）。
-const LOT_DATA_KEYS: [&str; 8] = ["zaishitsu", "inItaAtsu", "outItaAtsu", "reienHaba", "seihinItaAtsu", "seihinItaHaba", "keijo", "jiKotei"];
+const LOT_DATA_KEYS: [&str; 8] =
+    ["zaishitsu", "inItaAtsu", "outItaAtsu", "reienHaba", "seihinItaAtsu", "seihinItaHaba", "keijo", "jiKotei"];
 const DIMENSION_KEYS: [&str; 5] = ["inItaAtsu", "outItaAtsu", "reienHaba", "seihinItaAtsu", "seihinItaHaba"];
 const LOT_MIN_FIELDS: usize = 4;
 /// 画面の見た目・リンクのための項目（停止の文言に入れない）
@@ -316,8 +313,18 @@ pub fn normalize(raw: &Value, own_setsubi: &str, inspect_keywords: &[String]) ->
             ] {
                 item.insert(k.into(), v);
             }
-            for k in ["lotNo", "zaishitsu", "inItaAtsu", "outItaAtsu", "reienHaba", "seihinItaAtsu", "seihinItaHaba", "keijo", "yotoMei", "jiKotei"]
-            {
+            for k in [
+                "lotNo",
+                "zaishitsu",
+                "inItaAtsu",
+                "outItaAtsu",
+                "reienHaba",
+                "seihinItaAtsu",
+                "seihinItaHaba",
+                "keijo",
+                "yotoMei",
+                "jiKotei",
+            ] {
                 item.insert(k.into(), json!(""));
             }
         } else {
@@ -387,9 +394,10 @@ mod tests {
 
     #[test]
     fn stop_text_keeps_the_order_of_the_response() {
-        let m: Map<String, Value> =
-            serde_json::from_str(r#"{"roll":"ワークロ","lotNo":"ール交換計","zaishitsu":"画*","pass":"7分","kanryoYotei":"10/19 14:05","rowStyle":"x"}"#)
-                .unwrap();
+        let m: Map<String, Value> = serde_json::from_str(
+            r#"{"roll":"ワークロ","lotNo":"ール交換計","zaishitsu":"画*","pass":"7分","kanryoYotei":"10/19 14:05","rowStyle":"x"}"#,
+        )
+        .unwrap();
         assert!(is_stop_row(&m));
         assert_eq!(stop_text(&m), "ワークロール交換計画* 7分");
     }

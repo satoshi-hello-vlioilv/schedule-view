@@ -55,7 +55,12 @@ impl Reply {
         Reply { status, ctype: ctype.into(), headers: vec![], body: body.into() }
     }
     fn file(ctype: &str, name: &str, body: Vec<u8>) -> Reply {
-        Reply { status: 200, ctype: ctype.into(), headers: vec![("Content-Disposition".into(), format!("attachment; filename={name}"))], body }
+        Reply {
+            status: 200,
+            ctype: ctype.into(),
+            headers: vec![("Content-Disposition".into(), format!("attachment; filename={name}"))],
+            body,
+        }
     }
 }
 
@@ -105,7 +110,10 @@ pub fn parse_query(q: &str) -> Vec<(String, String)> {
         }
         String::from_utf8_lossy(&out).into_owned()
     }
-    q.split('&').filter(|p| !p.is_empty()).map(|p| p.split_once('=').map(|(k, v)| (dec(k), dec(v))).unwrap_or_else(|| (dec(p), String::new()))).collect()
+    q.split('&')
+        .filter(|p| !p.is_empty())
+        .map(|p| p.split_once('=').map(|(k, v)| (dec(k), dec(v))).unwrap_or_else(|| (dec(p), String::new())))
+        .collect()
 }
 
 fn arg<'a>(q: &'a [(String, String)], k: &str) -> Option<&'a str> {
@@ -310,7 +318,8 @@ impl App {
                 }
             }
         }
-        let kws: Vec<String> = self.ui()["inspect_keywords"].as_array().into_iter().flatten().filter_map(|k| k.as_str().map(str::to_string)).collect();
+        let kws: Vec<String> =
+            self.ui()["inspect_keywords"].as_array().into_iter().flatten().filter_map(|k| k.as_str().map(str::to_string)).collect();
         let raw = cm3::fetch_raw(&self.endpoint, setsubi, &eq.term_kbn)?;
         let mut data = cm3::normalize(&raw, setsubi, &kws)?;
         data["fetchedAt"] = json!(now_text());
@@ -410,7 +419,11 @@ impl App {
         let order = |s: &str| self.hot.equipments.iter().position(|e| e == s).unwrap_or(99);
         items.sort_by(|a, b| {
             let key = |x: &Map<String, Value>| {
-                (x["kanryoYoteiIso"].as_str().unwrap_or("9999").to_string(), order(x["setsubi"].as_str().unwrap_or("")), x["seq"].as_i64().unwrap_or(0))
+                (
+                    x["kanryoYoteiIso"].as_str().unwrap_or("9999").to_string(),
+                    order(x["setsubi"].as_str().unwrap_or("")),
+                    x["seq"].as_i64().unwrap_or(0),
+                )
             };
             key(a).cmp(&key(b))
         });
@@ -564,9 +577,13 @@ impl App {
                 let body = body_json().filter(Value::is_object).unwrap_or_else(|| json!({}));
                 match crate::xlsx::build(&body) {
                     Ok(data) => {
-                        let key = body.get("fileKey").filter(|v| crate::pyfmt::truthy(v)).or_else(|| body.get("sheet").filter(|v| crate::pyfmt::truthy(v)));
+                        let key = body
+                            .get("fileKey")
+                            .filter(|v| crate::pyfmt::truthy(v))
+                            .or_else(|| body.get("sheet").filter(|v| crate::pyfmt::truthy(v)));
                         let key = key.map(crate::pyfmt::json_py_str).unwrap_or_else(|| "cm3".into());
-                        let key: String = key.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
+                        let key: String =
+                            key.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
                         let name = format!("cm3_{key}_{}.xlsx", chrono::Local::now().format("%Y%m%d_%H%M"));
                         Reply::file("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", &name, data)
                     }
@@ -585,7 +602,7 @@ impl App {
             }
             ("GET" | "POST", "/api/ui/settings") => {
                 if req.method == "POST" {
-                    let body = body_json().filter(|v| crate::pyfmt::truthy(v)).unwrap_or_else(|| json!({}));
+                    let body = body_json().filter(crate::pyfmt::truthy).unwrap_or_else(|| json!({}));
                     let ui = view::merge_ui(&body);
                     if let Err(e) = crate::store::write_json(&self.ui_file(), &ui) {
                         return fail(500, e);
@@ -601,7 +618,11 @@ impl App {
                     let mut body = body_json().unwrap_or(Value::Null);
                     let err = view::valid_view(&body);
                     if !err.is_empty() {
-                        let msg = if err == "列IDが重複しています" { format!("{err}: {}", view::duplicated_id(&body)) } else { err.to_string() };
+                        let msg = if err == "列IDが重複しています" {
+                            format!("{err}: {}", view::duplicated_id(&body))
+                        } else {
+                            err.to_string()
+                        };
                         return fail(400, msg);
                     }
                     if body.get("maps").is_none() {
@@ -633,14 +654,14 @@ impl App {
                 ok(self.master.describe())
             }
             ("POST", "/api/master/test") => {
-                let body = body_json().filter(|v| crate::pyfmt::truthy(v)).unwrap_or_else(|| json!({}));
+                let body = body_json().filter(crate::pyfmt::truthy).unwrap_or_else(|| json!({}));
                 if let Err(e) = self.valid_key_body(&body) {
                     return fail(400, e);
                 }
                 ok(self.master.test_keys(&body, &self.cached_lot_items()))
             }
             ("POST", "/api/master/settings") => {
-                let body = body_json().filter(|v| crate::pyfmt::truthy(v)).unwrap_or_else(|| json!({}));
+                let body = body_json().filter(crate::pyfmt::truthy).unwrap_or_else(|| json!({}));
                 if let Err(e) = self.valid_key_body(&body) {
                     return fail(400, e);
                 }
@@ -743,7 +764,10 @@ impl App {
         for k in &keys {
             let s = k.get("schedule");
             if !s.and_then(Value::as_str).is_some_and(|s| fields.contains(&s)) {
-                return Err(format!("スケジュール側の項目が不正です: {}", s.map(crate::pyfmt::json_py_str).unwrap_or_else(|| "None".into())));
+                return Err(format!(
+                    "スケジュール側の項目が不正です: {}",
+                    s.map(crate::pyfmt::json_py_str).unwrap_or_else(|| "None".into())
+                ));
             }
         }
         let snap = self.master.snapshot();

@@ -61,7 +61,10 @@ pub fn mock_cm3(dir: &Path, delay: Duration) -> String {
                 }
                 let mut body = vec![0u8; len];
                 let _ = r.read_exact(&mut body);
-                let eq = serde_json::from_slice::<Value>(&body).ok().and_then(|v| v["setsubiName"].as_str().map(str::to_string)).unwrap_or_default();
+                let eq = serde_json::from_slice::<Value>(&body)
+                    .ok()
+                    .and_then(|v| v["setsubiName"].as_str().map(str::to_string))
+                    .unwrap_or_default();
                 std::thread::sleep(delay);
                 let mut s = s;
                 match std::fs::read(dir.join("cm3").join(format!("{eq}.json"))) {

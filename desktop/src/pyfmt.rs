@@ -80,9 +80,10 @@ pub fn py_float_str(s: &str) -> Option<f64> {
     let t: std::borrow::Cow<str> = if t.contains('_') {
         // `_` は数字と数字の間だけ
         let b = t.as_bytes();
-        let ok = b.iter().enumerate().all(|(i, &c)| {
-            c != b'_' || (i > 0 && i + 1 < b.len() && b[i - 1].is_ascii_digit() && b[i + 1].is_ascii_digit())
-        });
+        let ok = b
+            .iter()
+            .enumerate()
+            .all(|(i, &c)| c != b'_' || (i > 0 && i + 1 < b.len() && b[i - 1].is_ascii_digit() && b[i + 1].is_ascii_digit()));
         if !ok {
             return None;
         }

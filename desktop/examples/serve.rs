@@ -20,7 +20,9 @@ fn main() {
             let dir = PathBuf::from(dir);
             let delay = std::env::var("SV_CM3_DELAY").ok().and_then(|s| s.parse().ok()).unwrap_or(0.0);
             let url = common::mock_cm3(&dir, Duration::from_secs_f64(delay));
-            let work = PathBuf::from(args.get(3).cloned().unwrap_or_else(|| std::env::temp_dir().join(format!("sv-serve-{port}")).display().to_string()));
+            let work = PathBuf::from(
+                args.get(3).cloned().unwrap_or_else(|| std::env::temp_dir().join(format!("sv-serve-{port}")).display().to_string()),
+            );
             let _ = std::fs::create_dir_all(&work);
             common::app(&work, &dir, &url, |_| {})
         }

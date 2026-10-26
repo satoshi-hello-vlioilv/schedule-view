@@ -131,7 +131,11 @@ fn extract_exe(zip: &Path, exe: &str, to: &Path) -> Result<(), String> {
     let mut z = zip::ZipArchive::new(f).map_err(|e| e.to_string())?;
     let names: Vec<String> = z.file_names().map(|n| n.map(|n| n.into_owned()).map_err(|e| e.to_string())).collect::<Result<_, _>>()?;
     // 配る形の根（program/app/brand.json の隣）の exe
-    let root = names.iter().find_map(|n| n.strip_suffix("program/app/brand.json")).ok_or("ZIP に program/app/brand.json がありません")?.to_string();
+    let root = names
+        .iter()
+        .find_map(|n| n.strip_suffix("program/app/brand.json"))
+        .ok_or("ZIP に program/app/brand.json がありません")?
+        .to_string();
     let mut e = z.by_name(&format!("{root}{exe}")).map_err(|_| format!("ZIP に {exe} がありません"))?;
     let mut buf = Vec::new();
     e.read_to_end(&mut buf).map_err(|e| e.to_string())?;
