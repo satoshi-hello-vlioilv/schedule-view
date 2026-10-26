@@ -64,7 +64,9 @@ def design_gantt(size=256):
     小さい絵（24px 以下）は線を 2 画素の幅にする（1 画素だと白い帯とまざって淡く見えた: 採点の指摘）"""
     ground = rrect(0.5, 0.5, 0.46, 0.46, 0.13)
     bars = [rrect(0.36, 0.30, 0.18, 0.065, 0.06), rrect(0.55, 0.50, 0.24, 0.065, 0.06), rrect(0.46, 0.70, 0.20, 0.065, 0.06)]
-    now = segment(0.66, 0.18, 0.66, 0.82, max(0.03, 1.0 / size))
+    # 小さい絵は線を画素の境に合わせ、2 列ちょうどで描く（16px で両側がにじんで 3 列の灰緑に見えた: 作った後の採点の指摘）
+    x = 0.66 if size > 24 else round(0.66 * size) / size
+    now = segment(x, 0.18, x, 0.82, max(0.03, 1.0 / size))
     return [(ground, gradient(BLUE0, BLUE1))] + [(b, WHITE) for b in bars] + [(now, AMBER)]
 
 

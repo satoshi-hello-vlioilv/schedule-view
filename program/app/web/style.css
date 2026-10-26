@@ -364,10 +364,13 @@ td a:hover { text-decoration: underline; }
 
 /* ---------- exe の窓の係（desktop.js）: 題の下の版の札・知らせの帯・係のメニュー・版の配布。
    置き場と見せ方は program/tools/ui-proposals/2026-10-appmenu.json（2 回目の M・84.4 点）。緑＝新しい版がある（開き直せる） ---------- */
-.title { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.title { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+/* 札を足しても上の帯の高さを変えない（作った後の採点の指摘: 12px 高くなっていた）: 題の行と札の行を詰める */
+.title:has(.app-slot:not([hidden])) h1 { line-height: 17px; margin-bottom: 1px; }
+.app-slot { display: flex; }
 .app-slot[hidden] { display: none; }
 .app-chip { position: relative; display: inline-flex; align-items: center; border: 1px solid var(--line); background: #fff; color: var(--muted);
-  border-radius: 999px; padding: 0 9px; line-height: 18px; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  border-radius: 999px; padding: 0 9px; font: inherit; font-size: 12px; line-height: 13px; cursor: pointer; white-space: nowrap; }
 .app-chip:hover { border-color: var(--c-accent); color: var(--c-accent); }
 .app-chip.has { border-color: #b7dfc2; background: #e6f4ea; color: #1a7f37; font-weight: 600; }
 .app-dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: #d97706; border: 2px solid #fff; }
@@ -394,10 +397,10 @@ td a:hover { text-decoration: underline; }
 .dlg.app-narrow { width: min(560px, 94vw); }
 .app-list { margin: 4px 0 8px; padding-left: 20px; font-size: 13px; word-break: break-all; }
 .app-warn { color: var(--warn); background: var(--warn-bg); padding: 8px 12px; border-radius: 6px; }
-.app-flow { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0; margin: 12px 0; }
+.app-flow { list-style: none; display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 12px; padding: 0; margin: 12px 0; }
 .app-flow li { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
 .app-flow li span { color: var(--muted); font-size: 12px; }
-.app-flow code { font-size: 12px; overflow-wrap: anywhere; background: #f5f7f9; padding: 2px 6px; border-radius: 4px; }
+.app-flow code { display: block; max-width: 100%; box-sizing: border-box; font-size: 12px; white-space: nowrap; overflow-x: auto; background: #f5f7f9; padding: 2px 6px; border-radius: 4px; }
 .app-versions { width: 100%; font-size: 13px; border-collapse: collapse; }
 .app-versions th, .app-versions td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .app-versions th { background: #f7f9fb; color: #3e4c59; font-weight: 500; }

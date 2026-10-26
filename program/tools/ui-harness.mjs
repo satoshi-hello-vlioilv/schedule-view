@@ -8,6 +8,7 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,6 +26,15 @@ export function parseView(text) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** 空いているポート（乱数で選ぶと、ほかの撮影と重なって失敗することがあった） */
+function freePort() {
+  return new Promise((ok, ng) => {
+    const srv = net.createServer();
+    srv.once("error", ng);
+    srv.listen(0, "127.0.0.1", () => { const { port } = srv.address(); srv.close(() => ok(port)); });
+  });
+}
 
 async function waitUp(url, ms = 30000) {
   const end = Date.now() + ms;
@@ -50,7 +60,7 @@ export async function launch({ url } = {}) {
     const py = process.env.SV_PYTHON || (process.platform === "win32" ? "python" : "python3");
     const r = spawnSync(py, [path.join(REPO, "program", "tools", "fixture.py"), path.join(tmp, "data")], { encoding: "utf8" });
     if (r.status !== 0) throw new Error(`fixture.py: ${r.stderr}`);
-    const port = 18000 + Math.floor(Math.random() * 1000);
+    const port = await freePort();
     child = spawn(exe, [String(port), "", path.join(tmp, "work")], { env: { SV_FAKE_DESKTOP: "ready", ...process.env, SV_FIXTURE: path.join(tmp, "data") }, stdio: "ignore" });
     base = `http://127.0.0.1:${port}`;
   }

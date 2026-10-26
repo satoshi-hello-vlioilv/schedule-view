@@ -61,15 +61,18 @@ fn main() {
 /// 窓の係の作り物の答え（SV_FAKE_DESKTOP。ready＝新しい版 12.0.1 を取り込み済み・latest＝最新）。
 fn fake_desktop(method: &str, path: &str) -> Option<sv_core::app::Reply> {
     use serde_json::json;
-    let mode = std::env::var("SV_FAKE_DESKTOP").ok()?;
+    // 空の値は作り物なし（窓の外の、札・帯の無い画面を撮るとき）
+    let mode = std::env::var("SV_FAKE_DESKTOP").ok().filter(|m| !m.is_empty())?;
     if !path.starts_with("/__desktop/") {
         return None;
     }
     let ready = mode == "ready";
     let v = match (method, path) {
         ("GET", "/__desktop/info") => json!({"version": "12.0.0", "installed": true}),
-        ("GET", "/__desktop/update") => json!({"state": if ready { "ready" } else { "latest" }, "ready": if ready { json!("12.0.1") } else { json!(null) },
-                                                "current": "12.0.0", "checkedAt": "2026-10-26 16:30", "failed": [], "installed": true}),
+        ("GET", "/__desktop/update") => {
+            json!({"state": if ready { "ready" } else { "latest" }, "ready": if ready { json!("12.0.1") } else { json!(null) },
+                                                "current": "12.0.0", "checkedAt": "2026-10-26 16:30", "failed": [], "installed": true})
+        }
         ("GET", "/__desktop/install") => json!({"installed": true, "appDir": "C:\\Users\\user\\AppData\\Local\\ScheduleView\\app",
             "shortcut": {"ask": false, "declined": false, "links": [], "places": ["C:\\Users\\user\\Desktop", "C:\\Users\\user\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs"]}}),
         ("GET", "/__desktop/release") => json!({"reachable": true, "found": "\\\\srv\\share\\Releases", "adjusted": false,

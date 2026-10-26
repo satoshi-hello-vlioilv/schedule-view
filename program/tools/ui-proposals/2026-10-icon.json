@@ -9,42 +9,145 @@
       "self_check": "案を作った者が一覧（明るい地・タスクバー・起動画面の紺、16〜256px）を開いて確かめた。lines で 16px の同じ段の帯がくっつく・紺の地で縁が消える崩れを見つけ、帯の間を空け明るい縁を付けて撮り直した。",
       "proposals": {
         "gantt 作業の流れの帯": {
-          "score": {"order": 8, "chunk": 9, "hierarchy": 9, "visual": 8, "steps": 9, "effortless": 9, "intuitive": 8, "form": 9, "place": 8, "layout": 8, "tone": 9},
+          "score": {
+            "order": 8,
+            "chunk": 9,
+            "hierarchy": 9,
+            "visual": 8,
+            "steps": 9,
+            "effortless": 9,
+            "intuitive": 8,
+            "form": 9,
+            "place": 8,
+            "layout": 8,
+            "tone": 9
+          },
           "minus": [],
           "seen": "青 #0f6cbd の角丸の地に白い帯 3 本を右へずらして並べ、橙の縦線（いまの時刻）を通す。形が太く少ないので 16px（zoom-16 の左端）でも帯 3 本と橙の線がそのまま残り、タスクバーの暗い地・起動画面の紺の上でも青い地がはっきり浮く。時刻順に流れる作業と『いま』が一目で分かり、アプリの仕事に近い。画面の主の青と合う。弱い所: 設備ごと（L-1〜L-3）の別は絵に出ない。橙の線は 16px で 1 画素幅になり、帯の白とまざってやや淡い（読めなくはない）。帯の右端が線に重なる所は意図どおりで、くっつきではない。"
         },
         "calendar 暦と時計": {
-          "score": {"order": 7, "chunk": 6, "hierarchy": 6, "visual": 6, "steps": 7, "effortless": 6, "intuitive": 8, "form": 8, "place": 7, "layout": 7, "tone": 8},
+          "score": {
+            "order": 7,
+            "chunk": 6,
+            "hierarchy": 6,
+            "visual": 6,
+            "steps": 7,
+            "effortless": 6,
+            "intuitive": 8,
+            "form": 8,
+            "place": 7,
+            "layout": 7,
+            "tone": 8
+          },
           "minus": [
-            {"kind": "unreadable", "where": "zoom-16.png の左から 2 つ目（sheet-icons.png の calendar 行・16px）: 暦の升目が青い点のにじみになり、升目と分からない"},
-            {"kind": "overlap", "where": "zoom-16.png・zoom-24.png の左から 2 つ目: 右下の時計（橙の輪）が暦の右下の角と地の縁にくっつき、16px では時計の針が読めず輪が角に溶ける"}
+            {
+              "kind": "unreadable",
+              "where": "zoom-16.png の左から 2 つ目（sheet-icons.png の calendar 行・16px）: 暦の升目が青い点のにじみになり、升目と分からない"
+            },
+            {
+              "kind": "overlap",
+              "where": "zoom-16.png・zoom-24.png の左から 2 つ目: 右下の時計（橙の輪）が暦の右下の角と地の縁にくっつき、16px では時計の針が読めず輪が角に溶ける"
+            }
           ],
           "seen": "白い暦に右下の橙の時計。慣れた型で『予定』とは分かるが、予定表・カレンダー系のアプリと見分けにくく、圧延の作業予定という固さは出ない。256・48px では整っているが、主の形が暦と時計の 2 つで、16px では升目と時計が潰れて白い四角に橙の汚れのように見える。色は画面の青・橙と合う。"
         },
         "coil コイルと進む向き": {
-          "score": {"order": 6, "chunk": 6, "hierarchy": 7, "visual": 5, "steps": 6, "effortless": 5, "intuitive": 5, "form": 8, "place": 7, "layout": 7, "tone": 8},
+          "score": {
+            "order": 6,
+            "chunk": 6,
+            "hierarchy": 7,
+            "visual": 5,
+            "steps": 6,
+            "effortless": 5,
+            "intuitive": 5,
+            "form": 8,
+            "place": 7,
+            "layout": 7,
+            "tone": 8
+          },
           "minus": [
-            {"kind": "unreadable", "where": "zoom-16.png の左から 3 つ目（sheet-icons.png の coil 行・16px）: 右下の橙の矢印が 2〜3 画素の点になり、向きが読めない"},
-            {"kind": "overlap", "where": "zoom-16.png・zoom-24.png の左から 3 つ目: 矢印とコイルの下の帯（ほどけた板）がくっつき、一つの塊に見える"}
+            {
+              "kind": "unreadable",
+              "where": "zoom-16.png の左から 3 つ目（sheet-icons.png の coil 行・16px）: 右下の橙の矢印が 2〜3 画素の点になり、向きが読めない"
+            },
+            {
+              "kind": "overlap",
+              "where": "zoom-16.png・zoom-24.png の左から 3 つ目: 矢印とコイルの下の帯（ほどけた板）がくっつき、一つの塊に見える"
+            }
           ],
           "seen": "同心円のコイルと、ほどけた板、橙の矢印。現場の物（コイル）を描くので工場向けとは分かるが、小さいと CD・テープ・円盤に見え、『予定を時刻順に見る』仕事は伝わらない。円の形は強く残るのでタスクバーで見分けはつく。色は画面と合う。"
         },
         "list 予定の一覧といまの行の印": {
-          "score": {"order": 7, "chunk": 6, "hierarchy": 5, "visual": 6, "steps": 6, "effortless": 5, "intuitive": 8, "form": 8, "place": 7, "layout": 8, "tone": 7},
+          "score": {
+            "order": 7,
+            "chunk": 6,
+            "hierarchy": 5,
+            "visual": 6,
+            "steps": 6,
+            "effortless": 5,
+            "intuitive": 8,
+            "form": 8,
+            "place": 7,
+            "layout": 8,
+            "tone": 7
+          },
           "minus": [
-            {"kind": "unreadable", "where": "zoom-16.png の左から 4 つ目（sheet-icons.png の list 行・16px）: 4 行の白い線と、いまの行の帯が縞にまざり、橙の印が 1 画素の茶色の点になって見えない"}
+            {
+              "kind": "unreadable",
+              "where": "zoom-16.png の左から 4 つ目（sheet-icons.png の list 行・16px）: 4 行の白い線と、いまの行の帯が縞にまざり、橙の印が 1 画素の茶色の点になって見えない"
+            }
           ],
           "seen": "行頭の丸と白い線 4 行、2 行目に明るい帯と橙の印（いまの行）。画面の一覧そのものに近く、32px 以上ではいまの行が読める。ただし一般の『リスト』『メモ』の記号と同じ型で、ほかのアプリと見分けにくい。16・24px では行が細い縞になり、主の形（いまの行）が残らない。"
         },
         "lines 設備ごとの色の 3 本の線": {
-          "score": {"order": 7, "chunk": 7, "hierarchy": 5, "visual": 9, "steps": 6, "effortless": 6, "intuitive": 6, "form": 6, "place": 6, "layout": 7, "tone": 6},
+          "score": {
+            "order": 7,
+            "chunk": 7,
+            "hierarchy": 5,
+            "visual": 9,
+            "steps": 6,
+            "effortless": 6,
+            "intuitive": 6,
+            "form": 6,
+            "place": 6,
+            "layout": 7,
+            "tone": 6
+          },
           "minus": [
-            {"kind": "unreadable", "where": "zoom-16.png の右端（sheet-icons.png の lines 行・16px）: 下の時刻の目盛りが灰色のにじみになり、目盛りと読めない"},
-            {"kind": "unreadable", "where": "zoom-24.png の右端: 目盛りの白い刻みが 1 画素の点になり、24px（タスクバーの大きさ）でも目盛りと分からない"}
+            {
+              "kind": "unreadable",
+              "where": "zoom-16.png の右端（sheet-icons.png の lines 行・16px）: 下の時刻の目盛りが灰色のにじみになり、目盛りと読めない"
+            },
+            {
+              "kind": "unreadable",
+              "where": "zoom-24.png の右端: 目盛りの白い刻みが 1 画素の点になり、24px（タスクバーの大きさ）でも目盛りと分からない"
+            }
           ],
           "seen": "紺の地に、段ごとに青・緑・橙の帯を 2 つずつ置き、下に時刻の目盛り。HOT 一覧の設備の色（L-1 青・L-2 緑・L-3 橙）と合い、設備ごとに時刻順という仕事はいちばんよく伝わる。段の位置でも分かれるので色だけの区別ではない。作った者の直しで帯の間は 16px でも 1 画素空き、縁も明るくなっているが、紺の地はタスクバーの暗い地・起動画面の紺に近く、四角の外形が弱い（縁の細い線でやっと分かる）。主の形が 1 つでなく 6 つの帯と目盛りに分かれ、16px では色の点の集まりに見える。画面の主の青の地とは調子が違う。"
         }
       }
     }
-  ]
+  ],
+  "built": {
+    "name": "作った後（gantt・小さい絵の線を 2 画素）",
+    "images": "/tmp/claude-0/score-built-2/icon",
+    "self_check": "作った者が 3 つの大きさの line・release と、アイコンの一覧・起動画面を開いて、①〜④が直っていることを確かめた（上の帯の高さは画素の行で測った）",
+    "result": {
+      "score": {
+        "order": 8,
+        "chunk": 9,
+        "hierarchy": 9,
+        "visual": 9,
+        "steps": 9,
+        "effortless": 9,
+        "intuitive": 8,
+        "form": 9,
+        "place": 8,
+        "layout": 8,
+        "tone": 9
+      },
+      "minus": [],
+      "seen": "採点者が icon-sheet.mjs で撮り直した sheet-icons.png（明るい地・タスクバー・起動画面の紺）を見て、icon-16.png・icon-24.png を 16 倍・12 倍（最近傍）に広げ、icon.ico の 20px も画素で読んだ。16px は 10・11 列目、20px は 12・13 列目、24px は 15・16 列目が、どれもまざりの無い橙 #f2a93b のちょうど 2 列になり、1 回目にあった両側の灰緑のにじみが無くなった。どの地でも青い地が浮き、白い帯 3 本と『いま』の線が 16px でも分かれて読める。32px 以上・256px は前と同じく整う。弱い所: 16px の白い帯はふちが少しぼけ、いちばん上の帯がやや淡い（読めるので減点しない）。設備ごとの別は絵に出ない（案のときから）。"
+    }
+  }
 }
